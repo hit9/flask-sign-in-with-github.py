@@ -6,22 +6,26 @@ Access Github to login:
       github = Github(
           client_id="xxxxxxxxxxxx",
           client_secret = "xxxxxxxxxxxx",
-          callback="yourdomain.com/login/callback"
+          callback="yourdomain.com/authorize/callback"
       )
+  2.) and then in your app:
 
-      @app.route("/login")
-      def login():
-          return github.authorize()
+    @app.route("/login")
+    def login():
+        user_data = github.fetch_user()
+        if not user_data:
+            return github.authorize()
 
-  3.) fetch user information in your callback route:
-
-      @app.route("/login/callback")
-      def login_callback():
+    @app.route("/authorize/callback")
+    def authorize_callback():
+        github.fetch_token()
         user_data = github.fetch_user()  # return json
+        return user_data["login"] # unicode
+
 """
 
 import requests
-from flask import redirect, request
+from flask import redirect, request, session
 
 
 class Github(object):
@@ -41,7 +45,8 @@ class Github(object):
     def fetch_code(self):
         return request.args.get("code")
 
-    def fetch_token(self, code):
+    def fetch_token(self):
+        code = self.fetch_code()
         data = {
             "code": code,
             "client_id": self.client_id,
@@ -50,10 +55,20 @@ class Github(object):
         headers = {'Accept': 'application/json'}
         token_url = "https://github.com/login/oauth/access_token"
         re = requests.post(token_url, data=data, headers=headers)
-        return re.json()['access_token']
+        # set session
+        token = session["Github_access_token"] = re.json()['access_token']
+        return token
 
     def fetch_user(self):
-        token = self.fetch_token(self.fetch_code())
+        token = session.get("Github_access_token", None)
+
+        # No token session, go to authorize web flow
+        if not token:
+            return None
         params = {"access_token": token}
         user_api_url = "https://api.github.com/user"
-        return requests.get(user_api_url, params=params).json()
+        resp = requests.get(user_api_url, params=params)
+        # token in session not avaliblea now, out of lifetime
+        if resp.status_code != requests.codes.ok:
+            return None
+        return resp.json()
