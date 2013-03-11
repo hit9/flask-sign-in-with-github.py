@@ -13,18 +13,30 @@ github = Github(
     callback="http://localhost:5000/authorize/callback"
 )
 
+def do_login(user_data):
+	# do login stuff..: set session .etc
+	return user_data["login"]
+
 @app.route("/login")
 def login():
     user_data = github.fetch_user()
     if not user_data:
         return github.authorize()
-    return user_data["email"]
+    return do_login(user_data)
 
 @app.route("/authorize/callback")
 def authorize_callback():
     github.fetch_token()
     user_data = github.fetch_user()  # return json
-    return user_data["login"] # unicode
+    return do_login(user_data)
+
+### for test,not required!
+@app.route("/")
+def mk_bad_token():
+	from flask import session
+	session["Github_access_token"] = "BADTOKEN"
+	return ""
+
 
 if __name__ == '__main__':
     app.run(debug=True)
