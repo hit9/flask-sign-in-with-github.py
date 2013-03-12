@@ -1,7 +1,7 @@
 """
 Access Github to login:
 
-  1.) define a route to authorize.(redirect to github's oauth page):
+  1.) init github instance:
 
       github = Github(
           client_id="xxxxxxxxxxxx",
