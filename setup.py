@@ -9,7 +9,7 @@ setup(
         "Sign in with github via github V3 API in Flask"
     ),
     license="BSD",
-    url="https://github.com/hit9/flask-sign-in-with-github.py"
+    url="https://github.com/hit9/flask-sign-in-with-github.py",
     install_requires=["flask", "requests"],
     py_modules=["flask_github_login"]
 )

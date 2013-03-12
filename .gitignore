@@ -2,3 +2,6 @@
 *.swo
 *.pyc
 env/
+build/
+dist/
+flask_github_login.py.egg-info/
