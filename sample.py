@@ -1,11 +1,11 @@
-from flask import Flask
+from flask import session, flash, redirect, url_for, Flask
 
 app = Flask(__name__)
 
 import os
 app.secret_key = os.urandom(25)
 
-from Github import Github
+from flask_github_login import Github
 
 github = Github(
     client_id="27080baf703669cb7571",
@@ -13,9 +13,16 @@ github = Github(
     callback="http://localhost:5000/authorize/callback"
 )
 
+@app.route("/")
+def index():
+    return "index page.."
+
 def do_login(user_data):
-	# do login stuff..: set session .etc
-	return user_data["login"]
+    # do login stuff..: set session .etc
+    session["github_id"] = user_data["id"]
+    session["username"] = user_data["login"]
+    flash("Successfully logined!")
+    return redirect(url_for("index"))
 
 @app.route("/login")
 def login():
@@ -29,13 +36,6 @@ def authorize_callback():
     github.fetch_token()
     user_data = github.fetch_user()  # return json
     return do_login(user_data)
-
-### for test,not required!
-@app.route("/")
-def mk_bad_token():
-	from flask import session
-	session["Github_access_token"] = "BADTOKEN"
-	return ""
 
 
 if __name__ == '__main__':
